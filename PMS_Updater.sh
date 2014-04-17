@@ -47,45 +47,45 @@ done
 
 if [ $VERBOSE = 1 ]; then echo -n Fetching $URL .....; fi
 wget --quiet --http-user="$USERNAME" --http-password="$PASSWORD" --auth-no-challenge --no-check-certificate --output-document="/tmp/plex.update" "$URL"
-if [ $? -ne 0 ]; then
+if [ $? -ne 0 ]; then {
     # Error on the wget of the page.  Error and Exit
     echo Error downloading $URL
     exit 1
-else
+} else {
     if [ $VERBOSE = 1 ]; then echo Done.; fi
     if [ $VERBOSE = 1 ]; then echo -n Searching $URL for $PMSPATTERN .....; fi
     DOWNLOADURL=`grep -o $PMSPATTERN /tmp/plex.update`
-    if [ "x$DOWNLOADURL" = "x" ]; then
+    if [ "x$DOWNLOADURL" = "x" ]; then {
         # DOWNLOADURL is zero length, i.e. nothing matched PMSPATTERN. Error and exit
         echo Could not find a $PMSPATTERN PlexMediaServer-[version]-freebsd-amd64.tar.bz2 download link on page $URL
         exit 1
-    else
+    } else {
         if [ $VERBOSE = 1 ]; then echo Done.; fi
         if [ $VERBOSE = 1 ]; then echo Found download link $DOWNLOADURL; fi
         # Extract the filename to be downloaded
         DOWNLOADFILE=`basename $DOWNLOADURL`
         # Check if it has already been downloaded
-        if [ ! -e $DOWNLOADPATH/$DOWNLOADFILE ]; then
+        if [ ! -e $DOWNLOADPATH/$DOWNLOADFILE ]; then {
           # It is not already downloaded. See if it is newer
           CURRENTVER=`export LD_LIBRARY_PATH=$PMSPARENTPATH/$PMSLIVEFOLDER; $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server --version`
-          if [ $(verNum $DOWNLOADFILE) -gt $(verNum $CURRENTVER) ]; then
+          if [ $(verNum $DOWNLOADFILE) -gt $(verNum $CURRENTVER) ]; then {
             if [ $VERBOSE = 1 ]; then echo $DOWNLOADFILE is newer than $CURRENTVER; fi
             if [ $VERBOSE = 1 ]; then echo -n Downloading $DOWNLOADFILE .....; fi
             wget -qP $DOWNLOADPATH $DOWNLOADURL
-            if [ $? -ne 0 ]; then
+            if [ $? -ne 0 ]; then {
                 #  Something went wrong with the download. (should clean up) error and exit
                 echo Error downloading $DOWNLOADURL
                 rm -f $DOWNLOADPATH/$DOWNLOADFILE
                 exit 1
-            else
+            } else {
                 if [ $VERBOSE = 1 ]; then echo Done.; fi
-                if [ $AUTOUPDATE = 1 ]; then
+                if [ $AUTOUPDATE = 1 ]; then {
                   if [ $VERBOSE = 1 ]; then echo Auto-Update enabled.; fi
                   if [ $VERBOSE = 1 ]; then echo -n Verifying $DOWNLOADFILE .....; fi
                   bzip2 -t $DOWNLOADPATH/$DOWNLOADFILE
-                  if [ $? -ne 0 ]; then
+                  if [ $? -ne 0 ]; then {
                       echo $DOWNLOADFILE is not a valid archive, cannot update with this file.
-                  else
+                  } else {
                       if [ $VERBOSE = 1 ]; then echo Done; fi
                       if [ $VERBOSE = 1 ]; then echo -n Removing previous PMS Backup .....; fi
                       rm -rf $PMSPARENTPATH/$PMSBAKFOLDER
@@ -99,20 +99,20 @@ else
                       if [ $VERBOSE = 1 ]; then echo -n Extracting $DOWNLOADFILE .....; fi
                       mkdir $PMSPARENTPATH/$PMSLIVEFOLDER/
                       tar -xj --strip-components 1 --file $DOWNLOADPATH/$DOWNLOADFILE --directory $PMSPARENTPATH/$PMSLIVEFOLDER/
-                      if [ $? -ne 0 ]; then
+                      if [ $? -ne 0 ]; then {
+                          echo Error exctracting $DOWNLOADFILE. Rolling back to previous version.
                           rm -rf $PMSPARENTPATH/$PMSLIVEFOLDER/
                           mv $PMSPARENTPATH/$PMSBAKFOLDER/ $PMSPARENTPATH/$PMSLIVEFOLDER/
-                          echo Error exctracting $DOWNLOADFILE. Rolling back to previous version.
-                      else
+                      } else {
                           if [ $VERBOSE = 1 ]; then echo Done.; fi
-                      fi
+                      } fi
                       if [ $VERBOSE = 1 ]; then echo -n Starting Plex Media Server .....; fi
                       service plexmediaserver start
                       if [ $VERBOSE = 1 ]; then echo Done.; fi
-                  fi
-                fi
-            fi
-          fi
-        fi
-    fi
-fi
+                  } fi
+                } fi
+            } fi
+          } fi
+        } fi
+    } fi
+} fi
