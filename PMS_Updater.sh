@@ -23,16 +23,23 @@ OPTIONS:
    -u      PlexPass username
    -p      PlexPass password
    -a      Auto Update
+   -d      download folder (default /tmp)
    -v      Verbose
 EOF
 }
 
-while getopts x."u:p:av" OPTION
+verNum()
+{
+    echo "$@" | awk -F. '{ printf("%04d%04d%04d%04d%04d", $1,$2,$3,$4,$5)}'
+}
+
+while getopts x."u:p:ad:v" OPTION
 do
      case $OPTION in
          u) USERNAME=$OPTARG ;;
          p) PASSWORD=$OPTARG ;;
          a) AUTOUPDATE=1 ;;
+         d) DOWNLOADPATH=$OPTARG ;;
          v) VERBOSE=1 ;;
          ?) usage; exit ;;
      esac
@@ -57,9 +64,12 @@ else
         if [ $VERBOSE = 1 ]; then echo Found download link $DOWNLOADURL; fi
         # Extract the filename to be downloaded
         DOWNLOADFILE=`basename $DOWNLOADURL`
-# extract version and check if newer
+        # Check if it has already been downloaded
         if [ ! -e $DOWNLOADPATH/$DOWNLOADFILE ]; then
-            # If it hasn't already been downloaded, get it (check for failed prev download?)
+          # It is not already downloaded. See if it is newer
+          CURRENTVER=`export LD_LIBRARY_PATH=$PMSPARENTPATH/$PMSLIVEFOLDER; $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server --version`
+          if [ $(verNum $DOWNLOADFILE) -gt $(verNum $CURRENTVER) ]; then
+            if [ $VERBOSE = 1 ]; then echo $DOWNLOADFILE is newer than $CURRENTVER; fi
             if [ $VERBOSE = 1 ]; then echo -n Downloading $DOWNLOADFILE .....; fi
             wget -qP $DOWNLOADPATH $DOWNLOADURL
             if [ $? -ne 0 ]; then
@@ -102,6 +112,7 @@ else
                   fi
                 fi
             fi
+          fi
         fi
     fi
 fi
