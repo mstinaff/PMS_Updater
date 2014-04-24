@@ -1,5 +1,4 @@
 #!/bin/sh
-# Argument = -u username -p password -a -v
 
 URL="https://plex.tv/downloads?channel=plexpass"
 DOWNLOADPATH="/tmp"
@@ -11,6 +10,11 @@ CERTFILE="/usr/local/share/certs/ca-root-nss.crt"
 AUTOUPDATE=0
 FORCEUPDATE=0
 VERBOSE=0
+REMOVE=0
+
+# Initialize CURRENTVER to the script max so if reading the current version fails
+# for some reason we don't blindly clobber things
+CURRENTVER=9999.9999.9999.9999.9999
 
 usage()
 {
@@ -38,6 +42,8 @@ OPTIONS:
    -d      download folder (default /tmp) Ignored if -l is used
    -a      Auto Update to newer version
    -f      Force Update even if version is not newer
+   -r      Remove update packages older than current version
+             Done before any update actions are taken.
    -v      Verbose
 EOF
 }
@@ -55,6 +61,16 @@ verNum()
     echo "$@" | awk -F. '{ printf("%04d%04d%04d%04d%04d", $1,$2,$3,$4,$5)}'
 }
 
+##  removeOlder()
+##  READS:    $DOWNLOADPATH $CURRENTVER
+##  MODIFIES: NONE
+##
+##  Searches $DOWNLOADPATH for PMS install packages and removes versions older
+##  than $CURRENTVER
+removeOlder()
+{
+
+}
 ##  webGet()
 ##  READS:    $1 (URL) $DOWNLOADPATH $USERPASSFILE $USERNAME $PASSWORD $VERBOSE
 ##  MODIFIES: NONE
@@ -157,6 +173,7 @@ do
          a) AUTOUPDATE=1 ;;
          f) FORCEUPDATE=1 ;;
          v) VERBOSE=1 ;;
+         r) REMOVE=1 ;;
          ?) usage; exit 1 ;;
      esac
 done
