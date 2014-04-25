@@ -16,26 +16,26 @@ To address this I have made a script that can be copied into a running Plex Medi
 To use run PMS_Updater.sh as root. The following options can be used:
 
 ```
-OPTIONS:  
-  -u      PlexPass username  
-             If -u is specified without -p then the script
-             will prompt the user to enter the password
-             when needed  
-  -p      PlexPass password  
-  -c      PlexPass user/password file  
-             When wget is run with username and password
-             on the command line, that information is
-             displayed in the process list for all to see.
-             A more secure method is to create a file
-             readable only by root that is formatted
-             like this:  
-                 user={Your Username Here}  
-                 password={Your Password Here}  
-  -l      Local file to install instead of latest from Plex.tv  
-  -d      download folder (default /tmp) Ignored if -l is used  
-  -a      Auto Update to newer version  
-  -f      Force Update even if version is not newer  
-  -v      Verbose  
+OPTIONS:
+   -u      PlexPass username
+             If -u is specified without -p then the script will
+             prompt the user to enter the password when needed
+   -p      PlexPass password
+   -c      PlexPass user/password file
+             When wget is run with username and password on the
+             command line, that information is displayed in the
+             process list for all to see.  A more secure method
+             is to create a file readable only by root that is
+             formatted like this:
+               user={Your Username Here}
+               password={Your Password Here}
+   -l      Local file to install instead of latest from Plex.tv
+   -d      download folder (default /tmp) Ignored if -l is used
+   -a      Auto Update to newer version
+   -f      Force Update even if version is not newer
+   -r      Remove update packages older than current version
+             Done before any update actions are taken.
+   -v      Verbose
 ```
    
 Running without the username/password or bad username/password will retrieve the latest public release rather than the latest Plex Pass release.
