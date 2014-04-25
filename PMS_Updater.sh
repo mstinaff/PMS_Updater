@@ -5,7 +5,7 @@ DOWNLOADPATH="/tmp"
 PMSPARENTPATH="/usr/pbi/plexmediaserver-amd64/share"
 PMSLIVEFOLDER="plexmediaserver"
 PMSBAKFOLDER="plexmediaserver.bak"
-PMSPATTERN="http.*-freebsd-amd64.tar.bz2"
+PMSPATTERN="PlexMediaServer-[0-9]*.[0-9]*.[0-9]*.[0-9]*.[0-9]*-[0-9,a-f]*-freebsd-amd64.tar.bz2"
 CERTFILE="/usr/local/share/certs/ca-root-nss.crt"
 AUTOUPDATE=0
 FORCEUPDATE=0
@@ -15,6 +15,7 @@ REMOVE=0
 # Initialize CURRENTVER to the script max so if reading the current version fails
 # for some reason we don't blindly clobber things
 CURRENTVER=9999.9999.9999.9999.9999
+
 
 usage()
 {
@@ -61,16 +62,25 @@ verNum()
     echo "$@" | awk -F. '{ printf("%04d%04d%04d%04d%04d", $1,$2,$3,$4,$5)}'
 }
 
+
 ##  removeOlder()
-##  READS:    $DOWNLOADPATH $CURRENTVER
+##  READS:    $DOWNLOADPATH $PMSPATTERN $CURRENTVER
 ##  MODIFIES: NONE
 ##
 ##  Searches $DOWNLOADPATH for PMS install packages and removes versions older
 ##  than $CURRENTVER
 removeOlder()
 {
-
+    for FOUNDINSTALLFILE in `ls $DOWNLOADPATH/$PMSPATTERN`
+    do {
+        if [ $(verNum `basename $FOUNDINSTALLFILE`) -lt $(verNum $CURRENTVER) ]; then {
+            if [ $VERBOSE = 1 ]; then echo Removing $FOUNDINSTALLFILE; fi
+            rm -f $FOUNDINSTALLFILE
+        } fi
+    } done
 }
+
+
 ##  webGet()
 ##  READS:    $1 (URL) $DOWNLOADPATH $USERPASSFILE $USERNAME $PASSWORD $VERBOSE
 ##  MODIFIES: NONE
@@ -90,8 +100,6 @@ webGet()
             LOGININFO="--http-user=$USERNAME --http-password=$PASSWORD"
         fi
     fi
-
-echo $LOGININFO
 
     if [ $VERBOSE = 1 ]; then QUIET=""; fi
     wget $QUIET $LOGININFO --auth-no-challenge --ca-certificate=$CERTFILE --timestamping --directory-prefix="$DOWNLOADPATH" "$1"
@@ -113,7 +121,7 @@ findLatest()
 
     webGet "$URL" || exit $?
     if [ $VERBOSE = 1 ]; then echo -n Searching $URL for $PMSPATTERN .....; fi
-    DOWNLOADURL=`grep -o "$PMSPATTERN" "$DOWNLOADPATH/$SCRAPEFILE"`
+    DOWNLOADURL=`grep -o "http:.*$PMSPATTERN" "$DOWNLOADPATH/$SCRAPEFILE"`
     if [ "x$DOWNLOADURL" = "x" ]; then {
         # DOWNLOADURL is zero length, i.e. nothing matched PMSPATTERN. Error and exit
         echo Could not find a $PMSPATTERN download link on page $URL
@@ -162,7 +170,7 @@ applyUpdate()
     if [ $VERBOSE = 1 ]; then echo Done.; fi
 }
 
-while getopts x."u:p:c:l:d:afv" OPTION
+while getopts x."u:p:c:l:d:afvr" OPTION
 do
      case $OPTION in
          u) USERNAME=$OPTARG ;;
@@ -180,6 +188,7 @@ done
 
 # Get the current version
 CURRENTVER=`export LD_LIBRARY_PATH=$PMSPARENTPATH/$PMSLIVEFOLDER; $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server --version`
+if [ $REMOVE = 1 ]; then removeOlder; fi
 
 if [ "x$LOCALINSTALLFILE" = "x" ]; then {
     #  No local source provided, check the web
