@@ -121,7 +121,7 @@ findLatest()
 
     webGet "$URL" || exit $?
     if [ $VERBOSE = 1 ]; then echo -n Searching $URL for $PMSPATTERN .....; fi
-    DOWNLOADURL=`grep -o "http:.*$PMSPATTERN" "$DOWNLOADPATH/$SCRAPEFILE"`
+    DOWNLOADURL=`grep -o "http[s]:.*$PMSPATTERN" "$DOWNLOADPATH/$SCRAPEFILE"`
     if [ "x$DOWNLOADURL" = "x" ]; then {
         # DOWNLOADURL is zero length, i.e. nothing matched PMSPATTERN. Error and exit
         echo Could not find a $PMSPATTERN download link on page $URL
