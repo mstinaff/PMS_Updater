@@ -2,6 +2,8 @@
 
 URL="https://plex.tv/downloads?channel=plexpass"
 DOWNLOADPATH="/tmp"
+LOGPATH="/tmp"
+LOGFILE="PMS_Updater.log"
 PMSPARENTPATH="/usr/pbi/plexmediaserver-amd64/share"
 PMSLIVEFOLDER="plexmediaserver"
 PMSBAKFOLDER="plexmediaserver.bak"
@@ -11,6 +13,7 @@ AUTOUPDATE=0
 FORCEUPDATE=0
 VERBOSE=0
 REMOVE=0
+LOGGING=1
 
 # Initialize CURRENTVER to the script max so if reading the current version fails
 # for some reason we don't blindly clobber things
@@ -49,6 +52,23 @@ OPTIONS:
 EOF
 }
 
+##  LogMsg()
+##  READS:     STDIN (Piped input) $1 (passed in string) $LOGPATH $LOGFILE
+##  MODIFIES:  NONE
+##
+##  Writes log entries to $LOGGINGPATH/$LOGGINGFILE
+LogMsg()
+{
+    if [ "$1" = "-n" ]; then SWITCH="-n"; fi
+    while read IN; do
+      tdStamp=`date +"%Y-%m-%d %H:%M.%S"`
+      if [ $LOGGING = 1 ]; then echo "$tdStamp  $IN" >> $LOGPATH/$LOGFILE; fi
+      if [ $VERBOSE = 1 ] || [ "$1" = "-f" ]; then echo $SWITCH $IN; fi
+    done
+}
+
+
+
 
 ##  verNum()
 ##  READS:    $1 (passed in string)
@@ -64,7 +84,7 @@ verNum()
 
 
 ##  removeOlder()
-##  READS:    $DOWNLOADPATH $PMSPATTERN $CURRENTVER
+##  READS:    $DOWNLOADPATH $PMSPATTERN $CURRENTVER $VERBOSE $LOGGING
 ##  MODIFIES: NONE
 ##
 ##  Searches $DOWNLOADPATH for PMS install packages and removes versions older
@@ -74,15 +94,15 @@ removeOlder()
     for FOUNDINSTALLFILE in `ls $DOWNLOADPATH/$PMSPATTERN`
     do {
         if [ $(verNum `basename $FOUNDINSTALLFILE`) -lt $(verNum $CURRENTVER) ]; then {
-            if [ $VERBOSE = 1 ]; then echo Removing $FOUNDINSTALLFILE; fi
-            rm -f $FOUNDINSTALLFILE
+            echo Removing $FOUNDINSTALLFILE | LogMsg
+            rm -f $FOUNDINSTALLFILE 2>&1 | LogMsg
         } fi
     } done
 }
 
 
 ##  webGet()
-##  READS:    $1 (URL) $DOWNLOADPATH $USERPASSFILE $USERNAME $PASSWORD $VERBOSE
+##  READS:    $1 (URL) $DOWNLOADPATH $USERPASSFILE $USERNAME $PASSWORD $VERBOSE $LOGGING
 ##  MODIFIES: NONE
 ##
 ##  invoke wget with configured account info
@@ -102,16 +122,19 @@ webGet()
     fi
 
     if [ $VERBOSE = 1 ]; then QUIET=""; fi
+    echo Downloading $1 | LogMsg
     wget $QUIET $LOGININFO --auth-no-challenge --ca-certificate=$CERTFILE --timestamping --directory-prefix="$DOWNLOADPATH" "$1"
-    if [ $? -ne 0 ]; then {
+    if [ $? -ne 0 ]; then
         echo Error downloading $1
         exit 1
-    } fi
+    else
+        echo Download Complete | LogMsg
+    fi
 }
 
 
 ##  findLatest()
-##  READS:    $URL $DOWNLOADPATH $PMSPATTERN $VERBOSE
+##  READS:    $URL $DOWNLOADPATH $PMSPATTERN $VERBOSE $lOGGING
 ##  MODIFIES: $DOWNLOADURL
 ##
 ##  connects to the Plex.tv download site and scrapes for the latest download link
@@ -120,20 +143,20 @@ findLatest()
     local SCRAPEFILE=`basename $URL`
 
     webGet "$URL" || exit $?
-    if [ $VERBOSE = 1 ]; then echo -n Searching $URL for $PMSPATTERN .....; fi
+        echo Searching $URL for $PMSPATTERN ..... | LogMsg -n
     DOWNLOADURL=`grep -o "http[s]:.*$PMSPATTERN" "$DOWNLOADPATH/$SCRAPEFILE"`
     if [ "x$DOWNLOADURL" = "x" ]; then {
         # DOWNLOADURL is zero length, i.e. nothing matched PMSPATTERN. Error and exit
-        echo Could not find a $PMSPATTERN download link on page $URL
+        echo Could not find a $PMSPATTERN download link on page $URL | LogMsg -f
         exit 1
     } else {
-        if [ $VERBOSE = 1 ]; then echo Done.; fi
+        echo Done. | LogMsg -f
     } fi
 }
 
 
 ##  applyUpdate()
-##  READS:    $PMSPARENTPATH $PMSLIVEFOLDER $PMSBAKFOLDER $LOCALINSTALLFILE
+##  READS:    $PMSPARENTPATH $PMSLIVEFOLDER $PMSBAKFOLDER $LOCALINSTALLFILE $VERBOSE $LOGGING
 ##  MODIFIES: NONE
 ##
 ##  Removes anything in the specified backup location, stops
@@ -146,28 +169,29 @@ findLatest()
 ##    install
 applyUpdate()
 {
-    if [ $VERBOSE = 1 ]; then echo -n Removing previous PMS Backup .....; fi
-    rm -rf $PMSPARENTPATH/$PMSBAKFOLDER
-    if [ $VERBOSE = 1 ]; then echo Done.; fi
-    if [ $VERBOSE = 1 ]; then echo -n Stopping Plex Media Server .....; fi
-    service plexmediaserver stop
-    if [ $VERBOSE = 1 ]; then echo Done.; fi
-    if [ $VERBOSE = 1 ]; then echo -n Moving current Plex Media Server to backup location .....; fi
-    mv $PMSPARENTPATH/$PMSLIVEFOLDER/ $PMSPARENTPATH/$PMSBAKFOLDER/
-    if [ $VERBOSE = 1 ]; then echo Done.; fi
-    if [ $VERBOSE = 1 ]; then echo -n Extracting $LOCALINSTALLFILE .....; fi
-    mkdir $PMSPARENTPATH/$PMSLIVEFOLDER/
-    tar -xj --strip-components 1 --file $LOCALINSTALLFILE --directory $PMSPARENTPATH/$PMSLIVEFOLDER/
+
+    echo Removing previous PMS Backup ..... | LogMsg -n
+    rm -rf $PMSPARENTPATH/$PMSBAKFOLDER 2>&1 | LogMsg
+    echo Done. | LogMsg -f
+    echo Stopping Plex Media Server .....| LogMsg -n
+    service plexmediaserver stop 2>&1 | LogMsg
+    echo Done. | LogMsg -f
+    echo Moving current Plex Media Server to backup location .....| LogMsg -n
+    mv $PMSPARENTPATH/$PMSLIVEFOLDER/ $PMSPARENTPATH/$PMSBAKFOLDER/ 2>&1 | LogMsg
+    echo Done. | LogMsg -f
+    echo Extracting $LOCALINSTALLFILE .....| LogMsg -n
+    mkdir $PMSPARENTPATH/$PMSLIVEFOLDER/ 2>&1 | LogMsg
+    tar -xj --strip-components 1 --file $LOCALINSTALLFILE --directory $PMSPARENTPATH/$PMSLIVEFOLDER/ 2>&1 | LogMsg -f
     if [ $? -ne 0 ]; then {
-        echo Error exctracting $LOCALINSTALLFILE. Rolling back to previous version.
-        rm -rf $PMSPARENTPATH/$PMSLIVEFOLDER/
-        mv $PMSPARENTPATH/$PMSBAKFOLDER/ $PMSPARENTPATH/$PMSLIVEFOLDER/
+        echo Error exctracting $LOCALINSTALLFILE. Rolling back to previous version. | LogMsg -f
+        rm -rf $PMSPARENTPATH/$PMSLIVEFOLDER/ 2>&1 | LogMsg -f
+        mv $PMSPARENTPATH/$PMSBAKFOLDER/ $PMSPARENTPATH/$PMSLIVEFOLDER/ 2>&1 | LogMsg -f
     } else {
-        if [ $VERBOSE = 1 ]; then echo Done.; fi
+        echo Done. | LogMsg -f
     } fi
-    if [ $VERBOSE = 1 ]; then echo -n Starting Plex Media Server .....; fi
-    service plexmediaserver start
-    if [ $VERBOSE = 1 ]; then echo Done.; fi
+    echo Starting Plex Media Server .....| LogMsg -n
+    service plexmediaserver start 2>&1 | LogMsg
+    echo Done. | LogMsg -f
 }
 
 while getopts x."u:p:c:l:d:afvr" OPTION
@@ -197,24 +221,24 @@ if [ "x$LOCALINSTALLFILE" = "x" ]; then {
         webGet "$DOWNLOADURL"  || exit $?
         LOCALINSTALLFILE="$DOWNLOADPATH/`basename $DOWNLOADURL`"
     } else {
-        if [ $VERBOSE = 1 ]; then echo Already running latest version $CURRENTVER; fi
-        exit
+        echo Already running latest version $CURRENTVER | LogMsg
+                exit
     } fi
 } elif [ ! $FORCEUPDATE = 1 ] &&  [ $(verNum `basename $LOCALINSTALLFILE`) -le $(verNum $CURRENTVER) ]; then {
-    if [ $VERBOSE = 1 ]; then echo Already running version $CURRENTVER; fi
-    if [ $VERBOSE = 1 ]; then echo Use -f to force install $LOCALINSTALLFILE; fi
+    echo Already running version $CURRENTVER | LogMsg
+    echo Use -f to force install $LOCALINSTALLFILE | LogMsg
     exit
 } fi
 
 
 # If either update flag is set then verify archive integrity and install
 if [ $FORCEUPDATE = 1 ] || [ $AUTOUPDATE = 1 ]; then {
-    if [ $VERBOSE = 1 ]; then echo -n Verifying $LOCALINSTALLFILE .....; fi
+        echo Verifying $LOCALINSTALLFILE ..... | LogMsg -n
     bzip2 -t $LOCALINSTALLFILE
     if [ $? -ne 0 ]; then {
-        echo $LOCALINSTALLFILE is not a valid archive, cannot update with this file.
+        echo $LOCALINSTALLFILE is not a valid archive, cannot update with this file. | LogMsg -f
     } else {
-        if [ $VERBOSE = 1 ]; then echo Done; fi
+        echo Done | LogMsg -f
         applyUpdate
     } fi
 } fi
