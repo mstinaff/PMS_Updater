@@ -144,7 +144,7 @@ findLatest()
 
     webGet "$URL" || exit $?
         echo Searching $URL for $PMSPATTERN ..... | LogMsg -n
-    DOWNLOADURL=`grep -o "http[s]:.*$PMSPATTERN" "$DOWNLOADPATH/$SCRAPEFILE"`
+    DOWNLOADURL=`grep -o "http[s]*:.*$PMSPATTERN" "$DOWNLOADPATH/$SCRAPEFILE"`
     if [ "x$DOWNLOADURL" = "x" ]; then {
         # DOWNLOADURL is zero length, i.e. nothing matched PMSPATTERN. Error and exit
         echo Could not find a $PMSPATTERN download link on page $URL | LogMsg -f
@@ -189,8 +189,10 @@ applyUpdate()
     } else {
         echo Done. | LogMsg -f
     } fi
+    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg           
+    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
     echo Starting Plex Media Server .....| LogMsg -n
-    service plexmediaserver start 2>&1 | LogMsg
+    service plexmediaserver start
     echo Done. | LogMsg -f
 }
 
