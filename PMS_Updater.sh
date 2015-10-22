@@ -1,6 +1,6 @@
 #!/bin/sh
 
-URL="https://plex.tv/downloads?channel=plexpass"
+URL="https://plex.tv/downloads"
 DOWNLOADPATH="/tmp"
 LOGPATH="/tmp"
 LOGFILE="PMS_Updater.log"
