@@ -1,6 +1,7 @@
 #!/bin/sh
 
-URL="https://plex.tv/downloads"
+URLBASIC="https://plex.tv/downloads"
+URLPLEXPASS="https://plex.tv/downloads?channel=plexpass"
 DOWNLOADPATH="/tmp"
 LOGPATH="/tmp"
 LOGFILE="PMS_Updater.log"
@@ -14,6 +15,7 @@ FORCEUPDATE=0
 VERBOSE=0
 REMOVE=0
 LOGGING=1
+PLEXPASS=1
 
 # Initialize CURRENTVER to the script max so if reading the current version fails
 # for some reason we don't blindly clobber things
@@ -49,6 +51,7 @@ OPTIONS:
    -r      Remove update packages older than current version
              Done before any update actions are taken.
    -v      Verbose
+   -n     Use PlexPass version
 EOF
 }
 
@@ -134,12 +137,14 @@ webGet()
 
 
 ##  findLatest()
-##  READS:    $URL $DOWNLOADPATH $PMSPATTERN $VERBOSE $lOGGING
+##  READS:    $URLBASIC $URLPLEXPASS $DOWNLOADPATH $PMSPATTERN $VERBOSE $lOGGING
 ##  MODIFIES: $DOWNLOADURL
 ##
 ##  connects to the Plex.tv download site and scrapes for the latest download link
 findLatest()
 {
+    if [ $PLEXPASS = 1 ]; then local URL=$URLPLEXPASS; else then local URL=$URLBASIC; fi
+    if [ $VERBOSE = 1 ]; then echo Using URL $URL; fi
     local SCRAPEFILE=`basename $URL`
 
     webGet "$URL" || exit $?
@@ -196,7 +201,7 @@ applyUpdate()
     echo Done. | LogMsg -f
 }
 
-while getopts x."u:p:c:l:d:afvr" OPTION
+while getopts x."u:p:c:l:d:afvrn" OPTION
 do
      case $OPTION in
          u) USERNAME=$OPTARG ;;
@@ -208,6 +213,7 @@ do
          f) FORCEUPDATE=1 ;;
          v) VERBOSE=1 ;;
          r) REMOVE=1 ;;
+         n) PLEXPASS=0 ;;
          ?) usage; exit 1 ;;
      esac
 done
