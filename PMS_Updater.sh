@@ -51,7 +51,7 @@ OPTIONS:
    -r      Remove update packages older than current version
              Done before any update actions are taken.
    -v      Verbose
-   -n     Use normal version (not PlexPass) version
+   -n      Use normal version (not PlexPass) version
 EOF
 }
 
