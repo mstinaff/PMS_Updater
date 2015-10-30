@@ -51,7 +51,7 @@ OPTIONS:
    -r      Remove update packages older than current version
              Done before any update actions are taken.
    -v      Verbose
-   -n     Use PlexPass version
+   -n     Use normal version (not PlexPass) version
 EOF
 }
 
@@ -143,7 +143,7 @@ webGet()
 ##  connects to the Plex.tv download site and scrapes for the latest download link
 findLatest()
 {
-    if [ $PLEXPASS = 1 ]; then local URL=$URLPLEXPASS; else then local URL=$URLBASIC; fi
+    if [ $PLEXPASS = 1 ]; then local URL=$URLPLEXPASS; else local URL=$URLBASIC; fi
     if [ $VERBOSE = 1 ]; then echo Using URL $URL; fi
     local SCRAPEFILE=`basename $URL`
 
