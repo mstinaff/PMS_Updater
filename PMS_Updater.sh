@@ -114,14 +114,16 @@ webGet()
     local LOGININFO=""
     local QUIET="--quiet"
 
-    if [ ! "x$USERPASSFILE" = "x" ] && [ -e $USERPASSFILE ]; then
-        LOGININFO="--config=$USERPASSFILE"
-    elif [ ! "x$USERNAME" = "x" ]; then
-        if [ "x$PASSWORD" = "x" ]; then
-            LOGININFO="--http-user=$USERNAME --ask-password"
-        else
-            LOGININFO="--http-user=$USERNAME --http-password=$PASSWORD"
-        fi
+    if [ $PLEXPASS = 1 ]; then
+      if [ ! "x$USERPASSFILE" = "x" ] && [ -e $USERPASSFILE ]; then
+          LOGININFO="--config=$USERPASSFILE"
+      elif [ ! "x$USERNAME" = "x" ]; then
+          if [ "x$PASSWORD" = "x" ]; then
+              LOGININFO="--http-user=$USERNAME --ask-password"
+          else
+              LOGININFO="--http-user=$USERNAME --http-password=$PASSWORD"
+          fi
+      fi
     fi
 
     if [ $VERBOSE = 1 ]; then QUIET=""; fi
@@ -194,7 +196,7 @@ applyUpdate()
     } else {
         echo Done. | LogMsg -f
     } fi
-    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg           
+    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
     ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
     echo Starting Plex Media Server .....| LogMsg -n
     service plexmediaserver start
