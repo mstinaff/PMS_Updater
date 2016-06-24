@@ -1,14 +1,13 @@
 #!/bin/sh
 
-URLBASIC="https://plex.tv/downloads"
-URLPLEXPASS="https://plex.tv/downloads?channel=plexpass"
+URLBASIC="https://plex.tv/api/downloads/1.json"
+URLPLEXPASS="https://plex.tv/api/downloads/1.json?channel=plexpass"
 DOWNLOADPATH="/tmp"
 LOGPATH="/tmp"
 LOGFILE="PMS_Updater.log"
 PMSPARENTPATH="/usr/pbi/plexmediaserver-amd64/share"
 PMSLIVEFOLDER="plexmediaserver"
 PMSBAKFOLDER="plexmediaserver.bak"
-PMSPATTERN="PlexMediaServer-[0-9]*.[0-9]*.[0-9]*.[0-9]*.[0-9]*-[0-9,a-f]*-freebsd-amd64.tar.bz2"
 CERTFILE="/usr/local/share/certs/ca-root-nss.crt"
 AUTOUPDATE=0
 FORCEUPDATE=0
@@ -150,11 +149,11 @@ findLatest()
     local SCRAPEFILE=`basename $URL`
 
     webGet "$URL" || exit $?
-        echo Searching $URL for $PMSPATTERN ..... | LogMsg -n
-    DOWNLOADURL=`grep -o "http[s]*:.*$PMSPATTERN" "$DOWNLOADPATH/$SCRAPEFILE"`
+        echo Searching $URL for the FreeBSD download URL ..... | LogMsg -n
+    DOWNLOADURL=`cat $DOWNLOADPATH/$SCRAPEFILE | perl -MJSON::PP -E 'say decode_json(<STDIN>)->{computer}{FreeBSD}{releases}[0]{url}'`
     if [ "x$DOWNLOADURL" = "x" ]; then {
         # DOWNLOADURL is zero length, i.e. nothing matched PMSPATTERN. Error and exit
-        echo Could not find a $PMSPATTERN download link on page $URL | LogMsg -f
+        echo Could not find a FreeBSD download link on page $URL | LogMsg -f
         exit 1
     } else {
         echo Done. | LogMsg -f
