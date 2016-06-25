@@ -79,9 +79,20 @@ LogMsg()
 ##  Converts the Plex version string to a mathmatically comparable
 ##      number by removing non numericals and padding each section with zeros
 ##      so v0.9.9.10.485 becomes 00000009000900100485
+##      NOTE: Plex version numbers appear to have changed from something like
+##      v0.9.14.4.1556-a10e3c2
+##      to
+##      v1.0.0.2261-a17e99e
+##      Unfortunately this makes the new 1.X versions appear to be an older
+##      version than the 0.9.X versions. This sed hack will append a .0 version
+##      to the 1.X version so that it will now behave correctly. The new 1.X will
+##      now looks omething like:
+##      1.0.0.2261.0-a17e99e
+##      And will convert it to the proper long form such as:
+##      00010000000022610000
 verNum()
 {
-    echo "$@" | awk -F. '{ printf("%04d%04d%04d%04d%04d", $1,$2,$3,$4,$5)}'
+    echo "$@" | sed -e 's/^.*[^\.]\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)\([^\.]\)/\1.0\2/' | awk -F. '{ printf("%04d%04d%04d%04d%04d", $1,$2,$3,$4,$5)}'
 }
 
 
