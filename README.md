@@ -13,6 +13,13 @@ FreeNAS has a plug-in architecture that makes running Plex Media Server on FreeN
 
 To address this I have made a script that can be copied into a running Plex Media Server plug-in, and without needing anything else installed it can search the Plex.tv download site using paid PlexPass credentials and check for newer versions.  If a newer version is found it can either be downloaded and held for admin approval or automatically installed to the server.
 
+This script can be adapted to work with vanilla <a href="https://www.freebsd.org/">FreeBSD</a> by making the following change:
+
+```
+CHANGE: PMSPARENTPATH="/usr/pbi/plexmediaserver-amd64/share"
+TO:     PMSPARENTPATH="/usr/local/share/"
+```
+
 To use run PMS_Updater.sh as root. The following options can be used:
 
 ```
