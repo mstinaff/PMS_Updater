@@ -17,7 +17,7 @@ This script can be adapted to work with vanilla <a href="https://www.freebsd.org
 
 ```
 CHANGE: PMSPARENTPATH="/usr/pbi/plexmediaserver-amd64/share"
-TO:     PMSPARENTPATH="/usr/local/share/"
+TO:     PMSPARENTPATH="/usr/local/share"
 ```
 
 To use run PMS_Updater.sh as root. The following options can be used:
