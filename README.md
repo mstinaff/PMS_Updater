@@ -5,6 +5,10 @@ PMS_Updater.sh is a shell script for updating the Plex Media Server inside the F
 
 ---
 
+This script has been updated to work in a iocage jail in FreeNAS 11.2.  Please ensure you have wget and ca_root_nss installed.  To do so, from inside the jail (iocage exec plex csh) just run "pkg install wget" and the same for ca_root_nss.
+
+Copy the file into the root of the directory however you like and you can then run it from within the jail to update it.  Thanks to @sretalla at the FreeNAS forums for all the help provided.
+
 <a href="http://www.freenas.org/">FreeNAS</a> is an excellent open-source network attached storage project based on FreeBSD that is very capable of storing even the largest media libraries
 
 <a href="http://plex.tv">Plex</a> is an amazing media server/client platform that can organize and stream those same media libraries.
