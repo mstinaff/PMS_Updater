@@ -25,11 +25,9 @@ usage()
 {
 cat << EOF
 usage: $0 options
-
 This script will search the plex.tv download site for a download link
 and if it is newer than the currently installed version the script will
 download and optionaly install the new version.
-
 OPTIONS:
    -u      PlexPass username
              If -u is specified without -p then the script will
@@ -180,7 +178,7 @@ applyUpdate()
     rm -rf $PMSPARENTPATH/$PMSBAKFOLDER 2>&1 | LogMsg
     echo Done. | LogMsg -f
     echo Stopping Plex Media Server .....| LogMsg -n
-    service plexmediaserver_plexpass stop 2>&1
+    service plexmediaserver_plexpass stop 2>&1 | LogMsg
     echo Done. | LogMsg -f
     echo Moving current Plex Media Server to backup location .....| LogMsg -n
     mv $PMSPARENTPATH/$PMSLIVEFOLDER/ $PMSPARENTPATH/$PMSBAKFOLDER/ 2>&1 | LogMsg
