@@ -1,7 +1,7 @@
 #!/bin/sh
 
-URLBASIC="https://plex.tv/api/downloads/1.json"
-URLPLEXPASS="https://plex.tv/api/downloads/1.json?channel=plexpass"
+URLBASIC="https://plex.tv/api/downloads/5.json"
+URLPLEXPASS="https://plex.tv/api/downloads/5.json?channel=plexpass"
 DOWNLOADPATH="/tmp"
 LOGPATH="/tmp"
 LOGFILE="PMS_Updater.log"
