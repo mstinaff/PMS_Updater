@@ -46,4 +46,4 @@ The script can also be called from a cronjob to check for updates on a regular s
 Dependencies
 ===========
 
-The script requires wget and perl5 to properly work.
+The script requires wget and perl5 to properly work if you are working in something like a FreeBSD jail that doesn't come supplied with these packages.
