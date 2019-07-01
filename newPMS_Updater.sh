@@ -211,6 +211,7 @@ applyUpdate()
         echo Done. | LogMsg -f
     } fi
     ln -s $INJAILPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
+    ln -s $INJAILPARENTPATH/$PMSLIVEFOLDER/lib/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
     echo Starting Plex Media Server .....| LogMsg -n
     iocage exec $JAILNAME service plexmediaserver_plexpass start
     echo Done. | LogMsg -f
