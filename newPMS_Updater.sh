@@ -1,7 +1,7 @@
 #!/bin/sh
 
-JAILNAME=plex
-JAILROOT=/mnt/tank/iocage/jails/
+JAILNAME="plex"
+JAILROOT="/mnt/tank/iocage/jails/"
 ##################################
 URLBASIC="https://plex.tv/api/downloads/5.json"
 URLPLEXPASS="https://plex.tv/api/downloads/5.json?channel=plexpass"
