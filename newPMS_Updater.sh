@@ -1,13 +1,14 @@
 #!/bin/sh
 
 JAILNAME="plex"
-JAILROOT="/mnt/tank/iocage/jails/"
+JAILROOT="/mnt/tank/iocage/jails"
 ##################################
 URLBASIC="https://plex.tv/api/downloads/5.json"
 URLPLEXPASS="https://plex.tv/api/downloads/5.json?channel=plexpass"
 DOWNLOADPATH="$JAILROOT/$JAILNAME/root/usr/local/share"
 LOGPATH="$JAILROOT/$JAILNAME/root/var/log"
 LOGFILE="PMS_Updater.log"
+INJAILPARENTPATH="/usr/local/share"
 PMSPARENTPATH="$JAILROOT/$JAILNAME/root/usr/local/share"
 PMSLIVEFOLDER="plexmediaserver-plexpass"
 PMSBAKFOLDER="plexmediaserver-plexpass.bak"
@@ -209,8 +210,7 @@ applyUpdate()
     } else {
         echo Done. | LogMsg -f
     } fi
-    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
-    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
+    ln -s $INJAILPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
     echo Starting Plex Media Server .....| LogMsg -n
     iocage exec $JAILNAME service plexmediaserver_plexpass start
     echo Done. | LogMsg -f
