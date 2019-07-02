@@ -1,11 +1,16 @@
 #!/bin/sh
 
+
+JAILNAME="plex"
+
+JAILROOT="/mnt/$(iocage get -p)/iocage/jails"
 URLBASIC="https://plex.tv/api/downloads/5.json"
 URLPLEXPASS="https://plex.tv/api/downloads/5.json?channel=plexpass"
-DOWNLOADPATH="/tmp"
-LOGPATH="/tmp"
+DOWNLOADPATH="$JAILROOT/$JAILNAME/root/usr/local/share"
+LOGPATH="$JAILROOT/$JAILNAME/root/var/log"
 LOGFILE="PMS_Updater.log"
-PMSPARENTPATH="/usr/local/share"
+INJAILPARENTPATH="/usr/local/share"
+PMSPARENTPATH="$JAILROOT/$JAILNAME/root/usr/local/share"
 PMSLIVEFOLDER="plexmediaserver-plexpass"
 PMSBAKFOLDER="plexmediaserver-plexpass.bak"
 CERTFILE="/usr/local/share/certs/ca-root-nss.crt"
@@ -15,6 +20,7 @@ VERBOSE=0
 REMOVE=0
 LOGGING=1
 PLEXPASS=1
+
 
 # Initialize CURRENTVER to the script max so if reading the current version fails
 # for some reason we don't blindly clobber things
@@ -191,7 +197,7 @@ applyUpdate()
     rm -rf $PMSPARENTPATH/$PMSBAKFOLDER 2>&1 | LogMsg
     echo Done. | LogMsg -f
     echo Stopping Plex Media Server .....| LogMsg -n
-    service plexmediaserver_plexpass stop 2>&1
+    iocage exec $JAILNAME service plexmediaserver_plexpass stop 2>&1
     echo Done. | LogMsg -f
     echo Moving current Plex Media Server to backup location .....| LogMsg -n
     mv $PMSPARENTPATH/$PMSLIVEFOLDER/ $PMSPARENTPATH/$PMSBAKFOLDER/ 2>&1 | LogMsg
@@ -206,10 +212,10 @@ applyUpdate()
     } else {
         echo Done. | LogMsg -f
     } fi
-    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
-    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
+    ln -s $INJAILPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
+    ln -s $INJAILPARENTPATH/$PMSLIVEFOLDER/lib/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
     echo Starting Plex Media Server .....| LogMsg -n
-    service plexmediaserver_plexpass start
+    iocage exec $JAILNAME service plexmediaserver_plexpass start
     echo Done. | LogMsg -f
 }
 
@@ -231,7 +237,7 @@ do
 done
 
 # Get the current version
-CURRENTVER=`export LD_LIBRARY_PATH=$PMSPARENTPATH/$PMSLIVEFOLDER; $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server --version`
+CURRENTVER=`export LD_LIBRARY_PATH=$PMSPARENTPATH/$PMSLIVEFOLDER/lib; $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server --version`
 if [ $REMOVE = 1 ]; then removeOlder; fi
 
 if [ "x$LOCALINSTALLFILE" = "x" ]; then {
