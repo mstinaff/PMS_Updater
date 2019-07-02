@@ -1,19 +1,16 @@
 #!/bin/sh
 
 
-JAILNAME="plex"
-
-JAILROOT="/mnt/$(iocage get -p)/iocage/jails"
 URLBASIC="https://plex.tv/api/downloads/5.json"
 URLPLEXPASS="https://plex.tv/api/downloads/5.json?channel=plexpass"
-DOWNLOADPATH="$JAILROOT/$JAILNAME/root/usr/local/share"
-LOGPATH="$JAILROOT/$JAILNAME/root/var/log"
+DOWNLOADPATH="/tmp"
+LOGPATH="/var/log"
 LOGFILE="PMS_Updater.log"
-INJAILPARENTPATH="/usr/local/share"
-PMSPARENTPATH="$JAILROOT/$JAILNAME/root/usr/local/share"
+PMSPARENTPATH="/usr/local/share"
 PMSLIVEFOLDER="plexmediaserver-plexpass"
 PMSBAKFOLDER="plexmediaserver-plexpass.bak"
-SERVICENAME="plexmediaserver-plexpass"
+SERVICENAME="plexmediaserver_plexpass"
+export PYTHONHOME="$PMSPARENTPATH/$PMSLIVEFOLDER/Resources/Python"
 CERTFILE="/usr/local/share/certs/ca-root-nss.crt"
 AUTOUPDATE=0
 FORCEUPDATE=0
@@ -168,7 +165,7 @@ findLatest()
 
     webGet "$URL" || exit $?
         echo Searching $URL for the FreeBSD download URL ..... | LogMsg -n
-    DOWNLOADURL=`cat $DOWNLOADPATH/$SCRAPEFILE | perl -MJSON::PP -E 'say decode_json(<STDIN>)->{computer}{FreeBSD}{releases}[0]{url}'`
+    DOWNLOADURL=`cat $DOWNLOADPATH/$SCRAPEFILE | $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Script\ Host -c 'import sys, json; myobj = json.load(sys.stdin); print(myobj["computer"]["FreeBSD"]["releases"][0]["url"]);'`
     if [ "x$DOWNLOADURL" = "x" ]; then {
         # DOWNLOADURL is zero length, i.e. nothing matched PMSPATTERN. Error and exit
         echo Could not find a FreeBSD download link on page $URL | LogMsg -f
@@ -198,7 +195,7 @@ applyUpdate()
     rm -rf $PMSPARENTPATH/$PMSBAKFOLDER 2>&1 | LogMsg
     echo Done. | LogMsg -f
     echo Stopping Plex Media Server .....| LogMsg -n
-    iocage exec $JAILNAME service $SERVICENAME stop 2>&1
+    service $SERVICENAME stop 2>&1
     echo Done. | LogMsg -f
     echo Moving current Plex Media Server to backup location .....| LogMsg -n
     mv $PMSPARENTPATH/$PMSLIVEFOLDER/ $PMSPARENTPATH/$PMSBAKFOLDER/ 2>&1 | LogMsg
@@ -213,10 +210,10 @@ applyUpdate()
     } else {
         echo Done. | LogMsg -f
     } fi
-    ln -s $INJAILPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
-    ln -s $INJAILPARENTPATH/$PMSLIVEFOLDER/lib/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
+    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
+    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/lib/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
     echo Starting Plex Media Server .....| LogMsg -n
-    iocage exec $JAILNAME service $SERVICENAME start
+    service $SERVICENAME start
     echo Done. | LogMsg -f
 }
 
@@ -239,9 +236,9 @@ done
 
 # Change variables depending on PLEXPASS option.
 if [ $PLEXPASS = 0 ]; then {
-	PMSLIVEFOLDER="plexmediaserver"
-	PMSBAKFOLDER="plexmediaserver.bak"
-	SERVICENAME="plexmediaserver"
+        PMSLIVEFOLDER="plexmediaserver"
+        PMSBAKFOLDER="plexmediaserver.bak"
+        SERVICENAME="plexmediaserver"
 } fi
 
 # Get the current version
