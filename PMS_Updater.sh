@@ -91,7 +91,7 @@ verNum()
 ##  than $CURRENTVER
 removeOlder()
 {
-    for FOUNDINSTALLFILE in `ls $DOWNLOADPATH/$PMSPATTERN`
+    for FOUNDINSTALLFILE in `ls $DOWNLOADPATH/$PMSPATTERN 2>/dev/null`
     do {
         if [ $(verNum `basename $FOUNDINSTALLFILE`) -lt $(verNum $CURRENTVER) ]; then {
             echo Removing $FOUNDINSTALLFILE | LogMsg
