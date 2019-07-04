@@ -161,11 +161,9 @@ webGet()
 findLatest()
 {
     if [ $VERBOSE = 1 ]; then echo Using URL $TOKENURL; fi
-    local SCRAPEFILE="plex.json"
 
     echo Searching $TOKENURL for the FreeBSD download URL ..... | LogMsg -n
     DOWNLOADURL="$(fetch $TOKENURL -o- | $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Script\ Host -c 'import sys, json; myobj = json.load(sys.stdin); print(myobj["computer"]["FreeBSD"]["releases"][0]["url"]);')"
-    echo Download URL is $DOWNLOADURL | LogMsg -n
 
     if [ "x$DOWNLOADURL" = "x" ]; then {
         # DOWNLOADURL is zero length, i.e. nothing matched PMSPATTERN. Error and exit
