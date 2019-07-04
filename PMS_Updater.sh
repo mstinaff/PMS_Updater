@@ -1,20 +1,15 @@
 #!/bin/sh
 
-
-JAILNAME="plex"
-
-JAILROOT="/mnt/$(iocage get -p)/iocage/jails"
-URLBASIC="https://plex.tv/api/downloads/5.json"
-URLPLEXPASS="https://plex.tv/api/downloads/5.json?channel=plexpass"
-DOWNLOADPATH="$JAILROOT/$JAILNAME/root/usr/local/share"
-LOGPATH="$JAILROOT/$JAILNAME/root/var/log"
+PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
+TOKENURL="https://plex.tv/api/downloads/5.json?channel=plexpass&X-Plex-Token=$PLEXTOKEN"
+DOWNLOADPATH="/tmp"
+LOGPATH="/tmp"
 LOGFILE="PMS_Updater.log"
-INJAILPARENTPATH="/usr/local/share"
-PMSPARENTPATH="$JAILROOT/$JAILNAME/root/usr/local/share"
+PMSPARENTPATH="/usr/local/share"
 PMSLIVEFOLDER="plexmediaserver-plexpass"
-PMSBAKFOLDER="plexmediaserver-plexpass.bak"
-SERVICENAME="plexmediaserver-plexpass"
-CERTFILE="/usr/local/share/certs/ca-root-nss.crt"
+PMSPATTERN="PlexMediaServer-[0-9]*.[0-9]*.[0-9]*.[0-9]*-[0-9,a-f]*-FreeBSD-amd64.tar.bz2"
+export PYTHONHOME="$PMSPARENTPATH/$PMSLIVEFOLDER/Resources/Python"
+
 AUTOUPDATE=0
 FORCEUPDATE=0
 VERBOSE=0
@@ -22,6 +17,33 @@ REMOVE=0
 LOGGING=1
 PLEXPASS=1
 
+# Initialize CURRENTVER to the script max so if reading the current version fails
+# for some reason we don't blindly clobber things
+CURRENTVER=9999.9999.9999.9999.9999
+
+
+usage()
+
+
+root@carnage:~/updaterscript # cat tokenPMS_Updater.sh
+#!/bin/sh
+
+PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
+TOKENURL="https://plex.tv/api/downloads/5.json?channel=plexpass&X-Plex-Token=$PLEXTOKEN"
+DOWNLOADPATH="/tmp"
+LOGPATH="/tmp"
+LOGFILE="PMS_Updater.log"
+PMSPARENTPATH="/usr/local/share"
+PMSLIVEFOLDER="plexmediaserver-plexpass"
+PMSPATTERN="PlexMediaServer-[0-9]*.[0-9]*.[0-9]*.[0-9]*-[0-9,a-f]*-FreeBSD-amd64.tar.bz2"
+export PYTHONHOME="$PMSPARENTPATH/$PMSLIVEFOLDER/Resources/Python"
+
+AUTOUPDATE=0
+FORCEUPDATE=0
+VERBOSE=0
+REMOVE=0
+LOGGING=1
+PLEXPASS=1
 
 # Initialize CURRENTVER to the script max so if reading the current version fails
 # for some reason we don't blindly clobber things
@@ -38,18 +60,6 @@ and if it is newer than the currently installed version the script will
 download and optionaly install the new version.
 
 OPTIONS:
-   -u      PlexPass username
-             If -u is specified without -p then the script will
-             prompt the user to enter the password when needed
-   -p      PlexPass password
-   -c      PlexPass user/password file
-             When wget is run with username and password on the
-             command line, that information is displayed in the
-             process list for all to see.  A more secure method
-             is to create a file readable only by root that is
-             formatted like this:
-               user={Your Username Here}
-               password={Your Password Here}
    -l      Local file to install instead of latest from Plex.tv
    -d      download folder (default /tmp) Ignored if -l is used
    -a      Auto Update to newer version
@@ -122,30 +132,19 @@ removeOlder()
 
 
 ##  webGet()
-##  READS:    $1 (URL) $DOWNLOADPATH $USERPASSFILE $USERNAME $PASSWORD $VERBOSE $LOGGING
+##  READS:    $1 (URL) $DOWNLOADPATH $VERBOSE $LOGGING
 ##  MODIFIES: NONE
 ##
 ##  invoke wget with configured account info
+
 webGet()
 {
     local LOGININFO=""
     local QUIET="--quiet"
 
-    if [ $PLEXPASS = 1 ]; then
-      if [ ! "x$USERPASSFILE" = "x" ] && [ -e $USERPASSFILE ]; then
-          LOGININFO="--config=$USERPASSFILE"
-      elif [ ! "x$USERNAME" = "x" ]; then
-          if [ "x$PASSWORD" = "x" ]; then
-              LOGININFO="--http-user=$USERNAME --ask-password"
-          else
-              LOGININFO="--http-user=$USERNAME --http-password=$PASSWORD"
-          fi
-      fi
-    fi
-
     if [ $VERBOSE = 1 ]; then QUIET=""; fi
     echo Downloading $1 | LogMsg
-    wget $QUIET $LOGININFO --auth-no-challenge --ca-certificate=$CERTFILE --timestamping --directory-prefix="$DOWNLOADPATH" "$1"
+    fetch $QUIET -o "$DOWNLOADPATH/" "$1"
     if [ $? -ne 0 ]; then
         echo Error downloading $1
         exit 1
@@ -154,7 +153,6 @@ webGet()
     fi
 }
 
-
 ##  findLatest()
 ##  READS:    $URLBASIC $URLPLEXPASS $DOWNLOADPATH $PMSPATTERN $VERBOSE $lOGGING
 ##  MODIFIES: $DOWNLOADURL
@@ -162,16 +160,16 @@ webGet()
 ##  connects to the Plex.tv download site and scrapes for the latest download link
 findLatest()
 {
-    if [ $PLEXPASS = 1 ]; then local URL=$URLPLEXPASS; else local URL=$URLBASIC; fi
-    if [ $VERBOSE = 1 ]; then echo Using URL $URL; fi
-    local SCRAPEFILE=`basename $URL`
+    if [ $VERBOSE = 1 ]; then echo Using URL $TOKENURL; fi
+    local SCRAPEFILE="plex.json"
 
-    webGet "$URL" || exit $?
-        echo Searching $URL for the FreeBSD download URL ..... | LogMsg -n
-    DOWNLOADURL=`cat $DOWNLOADPATH/$SCRAPEFILE | perl -MJSON::PP -E 'say decode_json(<STDIN>)->{computer}{FreeBSD}{releases}[0]{url}'`
+    echo Searching $TOKENURL for the FreeBSD download URL ..... | LogMsg -n
+    DOWNLOADURL="$(fetch $TOKENURL -o- | $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Script\ Host -c 'import sys, json; myobj = json.load(sys.stdin); print(myobj["computer"]["FreeBSD"]["releases"][0]["url"]);')"
+    echo Download URL is $DOWNLOADURL | LogMsg -n
+
     if [ "x$DOWNLOADURL" = "x" ]; then {
         # DOWNLOADURL is zero length, i.e. nothing matched PMSPATTERN. Error and exit
-        echo Could not find a FreeBSD download link on page $URL | LogMsg -f
+        echo Could not find a FreeBSD download link on page $TOKENURL | LogMsg -f
         exit 1
     } else {
         echo Done. | LogMsg -f
@@ -198,7 +196,7 @@ applyUpdate()
     rm -rf $PMSPARENTPATH/$PMSBAKFOLDER 2>&1 | LogMsg
     echo Done. | LogMsg -f
     echo Stopping Plex Media Server .....| LogMsg -n
-    iocage exec $JAILNAME service $SERVICENAME stop 2>&1
+    service $SERVICENAME stop 2>&1
     echo Done. | LogMsg -f
     echo Moving current Plex Media Server to backup location .....| LogMsg -n
     mv $PMSPARENTPATH/$PMSLIVEFOLDER/ $PMSPARENTPATH/$PMSBAKFOLDER/ 2>&1 | LogMsg
@@ -213,19 +211,16 @@ applyUpdate()
     } else {
         echo Done. | LogMsg -f
     } fi
-    ln -s $INJAILPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
-    ln -s $INJAILPARENTPATH/$PMSLIVEFOLDER/lib/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
+    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
+    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/lib/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
     echo Starting Plex Media Server .....| LogMsg -n
-    iocage exec $JAILNAME service $SERVICENAME start
+    service $SERVICENAME start
     echo Done. | LogMsg -f
 }
 
-while getopts x."u:p:c:l:d:afvrn" OPTION
+while getopts x."l:d:afvrn" OPTION
 do
      case $OPTION in
-         u) USERNAME=$OPTARG ;;
-         p) PASSWORD=$OPTARG ;;
-         c) USERPASSFILE=$OPTARG ;;
          l) LOCALINSTALLFILE=$OPTARG ;;
          d) DOWNLOADPATH=$OPTARG ;;
          a) AUTOUPDATE=1 ;;
@@ -238,10 +233,14 @@ do
 done
 
 # Change variables depending on PLEXPASS option.
-if [ $PLEXPASS = 0 ]; then {
-	PMSLIVEFOLDER="plexmediaserver"
-	PMSBAKFOLDER="plexmediaserver.bak"
-	SERVICENAME="plexmediaserver"
+if [ $PLEXPASS = 1 ]; then {
+        PMSLIVEFOLDER="plexmediaserver-plexpass"
+        PMSBAKFOLDER="plexmediaserver-plexpass.bak"
+        SERVICENAME="plexmediaserver_plexpass"
+} else {
+        PMSLIVEFOLDER="plexmediaserver"
+        PMSBAKFOLDER="plexmediaserver.bak"
+        SERVICENAME="plexmediaserver"
 } fi
 
 # Get the current version
