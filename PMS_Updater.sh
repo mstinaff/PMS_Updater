@@ -1,5 +1,11 @@
 #!/bin/sh
 
+AUTOUPDATE=1
+FORCEUPDATE=0
+VERBOSE=1
+REMOVE=1
+LOGGING=1
+
 PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
 BASEURL="https://plex.tv/api/downloads/5.json"
 TOKENURL="$BASEURL?channel=plexpass&X-Plex-Token=$PLEXTOKEN"
@@ -8,12 +14,6 @@ LOGPATH="/tmp"
 LOGFILE="PMS_Updater.log"
 PMSPARENTPATH="/usr/local/share"
 PMSPATTERN="PlexMediaServer-[0-9]*.[0-9]*.[0-9]*.[0-9]*-[0-9,a-f]*-FreeBSD-amd64.tar.bz2"
-
-AUTOUPDATE=0
-FORCEUPDATE=0
-VERBOSE=0
-REMOVE=0
-LOGGING=1
 
 # Initialize CURRENTVER to the script max so if reading the current version fails
 # for some reason we don't blindly clobber things
