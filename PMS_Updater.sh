@@ -1,49 +1,19 @@
 #!/bin/sh
 
 PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
-TOKENURL="https://plex.tv/api/downloads/5.json?channel=plexpass&X-Plex-Token=$PLEXTOKEN"
+BASEURL="https://plex.tv/api/downloads/5.json"
+TOKENURL="$BASEURL?channel=plexpass&X-Plex-Token=$PLEXTOKEN"
 DOWNLOADPATH="/tmp"
 LOGPATH="/tmp"
 LOGFILE="PMS_Updater.log"
 PMSPARENTPATH="/usr/local/share"
-PMSLIVEFOLDER="plexmediaserver-plexpass"
 PMSPATTERN="PlexMediaServer-[0-9]*.[0-9]*.[0-9]*.[0-9]*-[0-9,a-f]*-FreeBSD-amd64.tar.bz2"
-export PYTHONHOME="$PMSPARENTPATH/$PMSLIVEFOLDER/Resources/Python"
 
 AUTOUPDATE=0
 FORCEUPDATE=0
 VERBOSE=0
 REMOVE=0
 LOGGING=1
-PLEXPASS=1
-
-# Initialize CURRENTVER to the script max so if reading the current version fails
-# for some reason we don't blindly clobber things
-CURRENTVER=9999.9999.9999.9999.9999
-
-
-usage()
-
-
-root@carnage:~/updaterscript # cat tokenPMS_Updater.sh
-#!/bin/sh
-
-PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
-TOKENURL="https://plex.tv/api/downloads/5.json?channel=plexpass&X-Plex-Token=$PLEXTOKEN"
-DOWNLOADPATH="/tmp"
-LOGPATH="/tmp"
-LOGFILE="PMS_Updater.log"
-PMSPARENTPATH="/usr/local/share"
-PMSLIVEFOLDER="plexmediaserver-plexpass"
-PMSPATTERN="PlexMediaServer-[0-9]*.[0-9]*.[0-9]*.[0-9]*-[0-9,a-f]*-FreeBSD-amd64.tar.bz2"
-export PYTHONHOME="$PMSPARENTPATH/$PMSLIVEFOLDER/Resources/Python"
-
-AUTOUPDATE=0
-FORCEUPDATE=0
-VERBOSE=0
-REMOVE=0
-LOGGING=1
-PLEXPASS=1
 
 # Initialize CURRENTVER to the script max so if reading the current version fails
 # for some reason we don't blindly clobber things
@@ -139,12 +109,11 @@ removeOlder()
 
 webGet()
 {
-    local LOGININFO=""
-    local QUIET="--quiet"
+    local QUIET="-q"
 
     if [ $VERBOSE = 1 ]; then QUIET=""; fi
     echo Downloading $1 | LogMsg
-    fetch $QUIET -o "$DOWNLOADPATH/" "$1"
+    fetch $QUIET -o "$DOWNLOADPATH/" "$1" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo Error downloading $1
         exit 1
@@ -160,10 +129,10 @@ webGet()
 ##  connects to the Plex.tv download site and scrapes for the latest download link
 findLatest()
 {
-    if [ $VERBOSE = 1 ]; then echo Using URL $TOKENURL; fi
+    if [ $VERBOSE = 1 ]; then echo Using URL $BASEURL; fi
 
-    echo Searching $TOKENURL for the FreeBSD download URL ..... | LogMsg -n
-    DOWNLOADURL="$(fetch $TOKENURL -o- | $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Script\ Host -c 'import sys, json; myobj = json.load(sys.stdin); print(myobj["computer"]["FreeBSD"]["releases"][0]["url"]);')"
+    echo Searching $BASEURL for the FreeBSD download URL ..... | LogMsg -n
+    DOWNLOADURL="$(fetch -q $TOKENURL -o- | $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Script\ Host -c 'import sys, json; myobj = json.load(sys.stdin); print(myobj["computer"]["FreeBSD"]["releases"][0]["url"]);')"
 
     if [ "x$DOWNLOADURL" = "x" ]; then {
         # DOWNLOADURL is zero length, i.e. nothing matched PMSPATTERN. Error and exit
@@ -230,16 +199,20 @@ do
      esac
 done
 
-# Change variables depending on PLEXPASS option.
-if [ $PLEXPASS = 1 ]; then {
+if [ -d "${PMSPARENTPATH}/plexmediaserver-plexpass" ]; then {
+        PLEXPASS=1
         PMSLIVEFOLDER="plexmediaserver-plexpass"
         PMSBAKFOLDER="plexmediaserver-plexpass.bak"
         SERVICENAME="plexmediaserver_plexpass"
 } else {
+        PLEXPASS=0
         PMSLIVEFOLDER="plexmediaserver"
         PMSBAKFOLDER="plexmediaserver.bak"
         SERVICENAME="plexmediaserver"
 } fi
+
+
+export PYTHONHOME="$PMSPARENTPATH/$PMSLIVEFOLDER/Resources/Python"
 
 # Get the current version
 CURRENTVER=`export LD_LIBRARY_PATH=$PMSPARENTPATH/$PMSLIVEFOLDER/lib; $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server --version`
