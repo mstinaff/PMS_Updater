@@ -101,13 +101,13 @@ removeOlder()
 }
 
 
-##  webGet()
+##  webFetch()
 ##  READS:    $1 (URL) $DOWNLOADPATH $VERBOSE $LOGGING
 ##  MODIFIES: NONE
 ##
 ##  invoke wget with configured account info
 
-webGet()
+webFetch()
 {
     local QUIET="-q"
 
@@ -222,7 +222,7 @@ if [ "x$LOCALINSTALLFILE" = "x" ]; then {
     #  No local source provided, check the web
     findLatest || exit $?
     if [ $FORCEUPDATE = 1 ] || [ $(verNum `basename $DOWNLOADURL`) -gt $(verNum $CURRENTVER) ]; then {
-        webGet "$DOWNLOADURL"  || exit $?
+        webFetch "$DOWNLOADURL"  || exit $?
         LOCALINSTALLFILE="$DOWNLOADPATH/`basename $DOWNLOADURL`"
     } else {
         echo Already running latest version $CURRENTVER | LogMsg
