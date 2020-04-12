@@ -4,12 +4,13 @@ Note: I think python temporarily broke in 1.16.6.1559, if you happen to be on th
 
 To get around it download the file manually and install like this,
 
+```
 cd /tmp
 
-fetch https://downloads.plex.tv/plex-media-server-new/1.16.6.1592-b9d49bdb7/freebsd/PlexMediaServer-1.16.6.1592-b9d49bdb7-FreeBSD-amd64.tar.bz2
+fetch https://downloads.plex.tv/plex-media-server-new/1.16.6.1592-b9d49bdb7/freebsd/PlexMediaServer-1.16.6.1592-b9d49bdb7-FreeBSD-amd64.tar.bz2 --no-verify-peer
 
 /root/PMS_Updater.sh -l /tmp/PlexMediaServer-1.16.6.1592-b9d49bdb7-FreeBSD-amd64.tar.bz2
-
+```
 ==========
 
 PMS_Updater.sh is a shell script for updating the Plex Media Server inside the FreeNAS Plex plugin
