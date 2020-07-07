@@ -9,15 +9,18 @@ LOGGING=1
 # In newer versions of the iocage the 'Plex Media Server' has moved from / to either /usr/local/plexdata or /usr/local/plexdata-plexpass/.
 # Try to find the Preferences.xml in all possible folders to fetch the token for downloads of PlexPass versions.
 
-if test -f "/Plex\ Media\ Server/Preferences.xml"; then
-   echo "Preferences found in /"
+if [ -f "/Plex\ Media\ Server/Preferences.xml" ]
+   then
+   echo "Preferences found in /";
    PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
 
-elif test -f "/usr/local/plex/Plex\ Media\ Server/Preferences.xml"; then
+elif [ -f "/usr/local/plex/Plex\ Media\ Server/Preferences.xml" ]
+   then
    echo "Preferences found in /usr/local/plexdata/"
    PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /usr/local/plex/Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
 
-elif test -f "/usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml"; then
+elif [ -f "/usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml" ]
+   then
    echo "Preferences found in /usr/local/plexdata-plexpass/"
    PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
    
