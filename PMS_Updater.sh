@@ -10,7 +10,7 @@ LOGGING=1
 # Try to find the Preferences.xml in all possible folders to fetch the token for downloads of PlexPass versions.
 
 if [ -f /Plex\ Media\ Server/Preferences.xml ]; then
-   if [ $VERBOSE = 1 ]; echo then "Preferences found in /Plex Media Server"; fi
+   if [ $VERBOSE = 1 ]; then echo "Preferences found in /Plex Media Server"; fi
    PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
 
 elif [ -f /usr/local/plex/Plex\ Media\ Server/Preferences.xml ]; then
