@@ -10,19 +10,19 @@ LOGGING=1
 # Try to find the Preferences.xml in all possible folders to fetch the token for downloads of PlexPass versions.
 
 if [ -f /Plex\ Media\ Server/Preferences.xml ]; then
-   echo "Preferences found in /";
+   if [ $VERBOSE = 1 ]; echo "Preferences found in /Plex Media Server"; fi
    PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
 
 elif [ -f /usr/local/plex/Plex\ Media\ Server/Preferences.xml ]; then
-   echo "Preferences found in /usr/local/plexdata/"
+   if [ $VERBOSE = 1 ]; then echo "Preferences found in /usr/local/plexdata/"; fi
    PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /usr/local/plex/Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
 
 elif [ -f /usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml ]; then
-   echo "Preferences found in /usr/local/plexdata-plexpass/"
+   if [ $VERBOSE = 1 ]; then echo "Preferences found in /usr/local/plexdata-plexpass/"; fi
    PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
    
 else
-   echo "Preferences.xml not found. You won't be able to update to the PlexPass version, but it will update to latest non-PlexPass version."
+   echo "Preferences.xml not found. This will likely prevent the script from downloading the latest version of Plex. You can still manually download Plex and run PMS_Updater.sh with the -l flag."
 fi
 
 BASEURL="https://plex.tv/api/downloads/5.json"
