@@ -6,7 +6,22 @@ VERBOSE=1
 REMOVE=1
 LOGGING=1
 
-PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
+# In newer versions of the iocage the 'Plex Media Server' has moved from / to either /usr/local/plexdata or /usr/local/plexdata-plexpass/.
+# Try to find the Preferences.xml in all possible folders to fetch the token for downloads of PlexPass versions.
+
+if [ -f /Plex\ Media\ Server/Preferences.xml ]; then
+   PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
+
+elif [ -f /usr/local/plex/Plex\ Media\ Server/Preferences.xml ]; then
+   PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /usr/local/plex/Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
+
+elif [ -f /usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml ]; then
+   PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
+   
+else
+   echo "Preferences.xml not found. This will likely prevent the script from downloading the latest version of Plex. You can still manually download Plex and run PMS_Updater.sh with the -l flag."
+fi
+
 BASEURL="https://plex.tv/api/downloads/5.json"
 TOKENURL="$BASEURL?channel=plexpass&X-Plex-Token=$PLEXTOKEN"
 DOWNLOADPATH="/tmp"
