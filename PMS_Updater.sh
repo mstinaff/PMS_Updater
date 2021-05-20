@@ -180,6 +180,7 @@ applyUpdate()
     } fi
     ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
     ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/lib/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
+    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Resources/Python/python27.zip $PMSPARENTPATH/$PMSLIVEFOLDER/ 2>&1 | LogMsg
     echo Starting Plex Media Server .....| LogMsg -n
     service $SERVICENAME start
     echo Done. | LogMsg -f
@@ -213,6 +214,11 @@ if [ -d "${PMSPARENTPATH}/plexmediaserver-plexpass" ]; then {
 
 
 export PYTHONHOME="$PMSPARENTPATH/$PMSLIVEFOLDER/Resources/Python"
+#fix/hack to recent python change in plex
+if [ -h "${PMSPARENTPATH}/${PMSLIVEFOLDER}/python27.zip" ]; then {
+} else {
+ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Resources/Python/python27.zip $PMSPARENTPATH/$PMSLIVEFOLDER/ 2>&1 | LogMsg
+} fi
 
 # Get the current version
 CURRENTVER=`export LD_LIBRARY_PATH=$PMSPARENTPATH/$PMSLIVEFOLDER/lib; $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server --version`
