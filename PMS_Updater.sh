@@ -6,12 +6,20 @@ VERBOSE=1
 REMOVE=1
 LOGGING=1
 
-#check if we're in pms plugin, or standard jail
-if [ -e "/Plex Media Server/Preferences.xml" ]; then {
+# Try to find the Preferences.xml in all possible folders to fetch the token for downloads of PlexPass versions.
+
+if [ -f /Plex\ Media\ Server/Preferences.xml ]; then
         PREFS="/Plex Media Server/Preferences.xml"
-} else {
+elif
+        [ -f /usr/local/plex/Plex\ Media\ Server/Preferences.xml ]; then
+        PREFS="/usr/local/plex/Plex Media Server/Preferences.xml"
+elif
+        [ -f /usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml ]; then
         PREFS="/usr/local/plexdata-plexpass/Plex Media Server/Preferences.xml"
-} fi
+else
+   echo "Preferences.xml not found. This will likely prevent the script from downloading the latest version of Plex. You can still manually download Plex and run PMS_UpdaUpdater.sh with the -l flag."
+fi
+
 PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' "${PREFS}" | sed 's/\".*//')"
 BASEURL="https://plex.tv/api/downloads/5.json"
 TOKENURL="$BASEURL?channel=plexpass&X-Plex-Token=$PLEXTOKEN"
