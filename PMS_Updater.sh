@@ -6,7 +6,21 @@ VERBOSE=1
 REMOVE=1
 LOGGING=1
 
-PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' /Plex\ Media\ Server/Preferences.xml | sed 's/\".*//')"
+# Try to find the Preferences.xml in all possible folders to fetch the token for downloads of PlexPass versions.
+
+if [ -f /Plex\ Media\ Server/Preferences.xml ]; then
+        PREFS="/Plex Media Server/Preferences.xml"
+elif
+        [ -f /usr/local/plex/Plex\ Media\ Server/Preferences.xml ]; then
+        PREFS="/usr/local/plex/Plex Media Server/Preferences.xml"
+elif
+        [ -f /usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml ]; then
+        PREFS="/usr/local/plexdata-plexpass/Plex Media Server/Preferences.xml"
+else
+   echo "Preferences.xml not found. This will likely prevent the script from downloading the latest version of Plex. You can still manually download Plex and run PMS_UpdaUpdater.sh with the -l flag."
+fi
+
+PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' "${PREFS}" | sed 's/\".*//')"
 BASEURL="https://plex.tv/api/downloads/5.json"
 TOKENURL="$BASEURL?channel=plexpass&X-Plex-Token=$PLEXTOKEN"
 DOWNLOADPATH="/tmp"
@@ -179,7 +193,6 @@ applyUpdate()
         echo Done. | LogMsg -f
     } fi
     ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server $PMSPARENTPATH/$PMSLIVEFOLDER/Plex_Media_Server 2>&1 | LogMsg
-    ln -s $PMSPARENTPATH/$PMSLIVEFOLDER/lib/libpython2.7.so.1 $PMSPARENTPATH/$PMSLIVEFOLDER/libpython2.7.so 2>&1 | LogMsg
     echo Starting Plex Media Server .....| LogMsg -n
     service $SERVICENAME start
     echo Done. | LogMsg -f
@@ -213,6 +226,7 @@ if [ -d "${PMSPARENTPATH}/plexmediaserver-plexpass" ]; then {
 
 
 export PYTHONHOME="$PMSPARENTPATH/$PMSLIVEFOLDER/Resources/Python"
+export PYTHONPATH="$PYTHONHOME/python27.zip"
 
 # Get the current version
 CURRENTVER=`export LD_LIBRARY_PATH=$PMSPARENTPATH/$PMSLIVEFOLDER/lib; $PMSPARENTPATH/$PMSLIVEFOLDER/Plex\ Media\ Server --version`
