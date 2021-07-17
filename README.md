@@ -10,7 +10,7 @@ This script will search the plex.tv download site for a download link and if it 
 Download the PMS_Updater.sh script in your jail:
 
 ```bash
-  fetch https://github.com/mstinaff/PMS_Updater/blob/master/PMS_Updater.sh
+  fetch https://raw.githubusercontent.com/mstinaff/PMS_Updater/master/PMS_Updater.sh
 ```
 ## Usage
 
