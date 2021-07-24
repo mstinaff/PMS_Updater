@@ -17,7 +17,7 @@ elif
         [ -f /usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml ]; then
         PREFS="/usr/local/plexdata-plexpass/Plex Media Server/Preferences.xml"
 else
-   echo "Preferences.xml not found. This will likely prevent the script from downloading the latest version of Plex. You can still manually download Plex and run PMS_UpdaUpdater.sh with the -l flag."
+   echo "Preferences.xml not found. This will likely prevent the script from downloading the latest version of Plex. You can still manually download Plex and run PMS_Updater.sh with the -l flag."
 fi
 
 PLEXTOKEN="$(sed -n 's/.*PlexOnlineToken="//p' "${PREFS}" | sed 's/\".*//')"
