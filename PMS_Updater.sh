@@ -14,6 +14,9 @@ elif
         [ -f /usr/local/plex/Plex\ Media\ Server/Preferences.xml ]; then
         PREFS="/usr/local/plex/Plex Media Server/Preferences.xml"
 elif
+        [ -f /usr/local/plexdata/Plex\ Media\ Server/Preferences.xml ]; then
+        PREFS="/usr/local/plexdata/Plex Media Server/Preferences.xml"
+elif
         [ -f /usr/local/plexdata-plexpass/Plex\ Media\ Server/Preferences.xml ]; then
         PREFS="/usr/local/plexdata-plexpass/Plex Media Server/Preferences.xml"
 else
